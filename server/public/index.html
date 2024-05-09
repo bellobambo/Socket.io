@@ -13,15 +13,31 @@
 </head>
 
 <body>
-    <form>
-        <input type="text" placeholder="Your message">
-        <button>Send</button>
-    </form>
-    <ul></ul>
+    <main>
+        <form action="" class="form-join">
+            <input type="text" id="name" maxlength="8" placeholder="Your Name" size="5" required>
+            <input type="text" id="room" placeholder="Chat Room" size="5" required>
+            <button id="join">Join</button>
+        </form>
+    
+        <ul class="chat-display"></ul>
+        <p class="user-list"></p>
+    
+        <p class="room-list"></p>
+    
+        <form action="" class="form-msg">
+            <input type="text">
+        </form>
+        <form>
+            <input type="text" id="message" placeholder="Your message" required>
+            <button type="submit">Send</button>
+        </form>
+    
+        <p class="activity">
+    
+        </p>
 
-    <p class="activity">
-
-    </p>
+    </main>
 </body>
 
 </html>
