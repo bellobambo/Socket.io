@@ -27,9 +27,10 @@ const UsersState = {
 
 const io = new Server(expressServer, {
     cors: {
-        origin: process.env.NODE_ENV === "production" ? false : ["https://chat-app-t0wu.onrender.com", "https://chat-app-t0wu.onrender.com"]
+        origin: process.env.NODE_ENV === "production" ? "https://chat-app-t0wu.onrender.com" : ["http://localhost:5500", "http://127.0.0.1:5500"]
     }
 })
+
 
 io.on('connection', socket => {
     console.log(`User ${socket.id} connected`)
