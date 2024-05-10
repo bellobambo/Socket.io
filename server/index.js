@@ -35,45 +35,85 @@ io.on('connection', socket => {
     console.log(`User ${socket.id} connected`)
 
     // Upon Connection - only to User
-    socket.emit('message', buildMsg(ADMIN , 'Welcome to chat App'))
+    socket.emit('message', buildMsg(ADMIN, 'Welcome to chat App'))
 
 
-    socket.on('enterRoom' , ({name , room}) =>{
+    socket.on('enterRoom', ({ name, room }) => {
 
         const prevRoom = getUser(socket.io)?.room
 
-        if(prevRoom){
+        if (prevRoom) {
             socket.leave(prevRoom)
-            io.to(prevRoom).emit('message' , buildMsg(ADMIN, `${name} has left the room`))
+            io.to(prevRoom).emit('message', buildMsg(ADMIN, `${name} has left the room`))
         }
 
-        const user = activateUser(socket.id , name , room)
+        const user = activateUser(socket.id, name, room)
+
+        if (prevRoom) {
+            io.to(prevRoom).emit('userList', {
+                users: getUserInRoom(prevRoom)
+            })
+        }
+
+        socket.join(user.room)
+
+        //To User That Joined
+        socket.emit('message', buildMsg(ADMIN, `you have joined ${user.room} chat room`))
+
+        //To EVeryone else
+        socket.broadcast.to(user.room).emit('message', buildMsg(ADMIN, `${user.name} has Joined the Room`))
+
+
+        //Update Userlist for room
+
+        io.to(user.room).emit('userList', {
+            users: getUserInRoom(user.room)
+        })
+
+        io.emit('roomList', {
+            room: getAllActiveRooms()
+        })
+
     })
-
-    // Upon Connection - only to User
-    socket.broadcast.emit('message', `User ${socket.id.substring(0, 5)} connected`)
-
-
-
-    socket.on('message', data => {
-        console.log(data)
-        io.emit('message', `${socket.id.substring(0, 5)}: ${data}`)
-    })
-
 
     //when user disconnects
 
     socket.on('disconnect', () => {
-        socket.broadcast.emit('message', `User ${socket.id.substring(0, 5)} disconnected`)
+        const user = getUser(socket.id)
+        UserLeaveApp(socket.id)
+        if (user) {
+            io.to(user.room).emit('message', buildMsg(ADMIN, `${user.name} has left the room`))
+
+            io.to(user.room).emit('userList', {
+                users: getUserInRoom(user.room)
+            })
+
+            io.to('roomList', {
+                rooms: getAllActiveRooms()
+            })
+
+            console.log(`User ${socket.id} disconnected`)
+        }
 
     })
 
+    //Listen for a message event
+
+    socket.on('message', ({ name, text }) => {
+        const room = getUser(socket.id)?.room
+        if (room) {
+
+            io.to(room).emit('message', buildMsg(name, text))
+        }
+    })
 
     //listen for activity
-
-
     socket.on('activity', (name) => {
-        socket.broadcast.emit('activity', name)
+        const room = getUser(socket.id)?.room
+        if (room) {
+            socket.broadcast.to(room).emit('activity', name)
+
+        }
     })
 
 })
@@ -120,7 +160,7 @@ function getUserInRoom(room) {
 }
 
 function getAllActiveRooms() {
-    return Array.from(new Set( UsersState.users.map(user => user.room)))
+    return Array.from(new Set(UsersState.users.map(user => user.room)))
 }
 
 
